@@ -1,3 +1,38 @@
+<script setup>
+import { onMounted, ref } from "vue";
+
+let form = ref([]);
+let allCustomers = ref([]);
+let customer_id = ref([]);
+let item = ref([]);
+let listCart = ref([]);
+
+onMounted(async () => {
+    indexForm();
+    getAllCustomers();
+});
+
+const indexForm = async () => {
+    let response = await axios.get("/api/create_invoice");
+    // console.log("form", response.data);
+    form.value = response.data;
+};
+
+const getAllCustomers = async () => {
+    let response = await axios.get("/api/customers");
+    //console.log("response", response);
+    allCustomers.value = response.data.customers;
+};
+
+const addCard = (item) => {
+    const itemCart = {
+        id: item.id,
+        item_code: item.item_code,
+        description: item.description,
+    };
+};
+</script>
+
 <template>
     <div class="container">
         <!--==================== NEW INVOICE ====================-->
@@ -13,8 +48,20 @@
                 <div class="card__content--header">
                     <div>
                         <p class="my-1">Customer</p>
-                        <select name="" id="" class="input">
-                            <option value="">cust 1</option>
+                        <select
+                            name=""
+                            id=""
+                            class="input"
+                            v-model="customer_id"
+                        >
+                            <option disabled>Select Customer</option>
+                            <option
+                                :value="customer_id"
+                                v-for="customer in allCustomers"
+                                :key="customer.id"
+                            >
+                                {{ customer.firstname }}
+                            </option>
                         </select>
                     </div>
                     <div>
@@ -24,16 +71,30 @@
                             placeholder="dd-mm-yyyy"
                             type="date"
                             class="input"
+                            v-model="form.date"
                         />
                         <!---->
                         <p class="my-1">Due Date</p>
-                        <input id="due_date" type="date" class="input" />
+                        <input
+                            id="due_date"
+                            type="date"
+                            class="input"
+                            v-model="form.due_date"
+                        />
                     </div>
                     <div>
-                        <p class="my-1">Numero</p>
-                        <input type="text" class="input" />
+                        <p class="my-1">Number</p>
+                        <input
+                            type="text"
+                            class="input"
+                            v-model="form.number"
+                        />
                         <p class="my-1">Reference(Optional)</p>
-                        <input type="text" class="input" />
+                        <input
+                            type="text"
+                            class="input"
+                            v-model="form.reference"
+                        />
                     </div>
                 </div>
                 <br /><br />
