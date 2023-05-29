@@ -1,15 +1,20 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import router from "../../router";
 
 let form = ref([]);
 let allCustomers = ref([]);
 let customer_id = ref([]);
 let item = ref([]);
 let listCart = ref([]);
+const showModal = ref(false);
+const hideModal = ref(true);
+let listProducts = ref([]);
 
 onMounted(async () => {
     indexForm();
     getAllCustomers();
+    getProducts();
 });
 
 const indexForm = async () => {
@@ -29,7 +34,67 @@ const addCard = (item) => {
         id: item.id,
         item_code: item.item_code,
         description: item.description,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
     };
+    listCart.value.push(itemCart);
+    closeModal();
+};
+
+const removeItem = (i) => {
+    listCart.value.splice(i, 1);
+};
+
+const openModal = () => {
+    showModal.value = !showModal.value;
+};
+
+const closeModal = () => {
+    showModal.value = !hideModal.value;
+};
+
+const getProducts = async () => {
+    let response = await axios.get("/api/products");
+    // console.log("response", response.data);
+    listProducts.value = response.data.products;
+};
+
+const SubTotal = () => {
+    let total = 0;
+    listCart.value.map((data) => {
+        total = total + data.quantity * data.unit_price;
+    });
+    return total;
+};
+
+const Total = () => {
+    return SubTotal() - form.value.discount;
+};
+
+const onSave = () => {
+    if (listCart.value.length >= 1) {
+        let subTotal = 0;
+        subTotal = SubTotal();
+
+        let total = 0;
+        total = Total();
+
+        const formData = new FormData();
+        formData.append("invoice_item", JSON.stringify(listCart.value));
+        formData.append("customer_id", customer_id.value);
+        formData.append("date", form.value.date);
+        formData.append("due_date", form.value.due_date);
+        formData.append("number", form.value.number);
+        formData.append("reference", form.value.reference);
+        formData.append("discount", form.value.discount);
+        formData.append("subtotal", subTotal);
+        formData.append("total", total);
+        formData.append("term_and_conditions", form.value.term_and_conditions);
+
+        axios.post("/api/add_invoice", formData);
+        listCart.value = [];
+        router.push("/");
+    }
 };
 </script>
 
@@ -56,7 +121,7 @@ const addCard = (item) => {
                         >
                             <option disabled>Select Customer</option>
                             <option
-                                :value="customer_id"
+                                :value="customer.id"
                                 v-for="customer in allCustomers"
                                 :key="customer.id"
                             >
@@ -108,21 +173,44 @@ const addCard = (item) => {
                     </div>
 
                     <!-- item 1 -->
-                    <div class="table--items2">
-                        <p>#093654 vjxhchkvhxc vkxckvjkxc jkvjxckvjkx</p>
+                    <div
+                        class="table--items2"
+                        v-for="(itemCart, i) in listCart"
+                        :key="itemCart.id"
+                    >
                         <p>
-                            <input type="text" class="input" />
+                            {{ itemCart.item_code }} {{ itemCart.description }}
                         </p>
                         <p>
-                            <input type="text" class="input" />
+                            <input
+                                type="text"
+                                class="input"
+                                v-model="itemCart.unit_price"
+                            />
                         </p>
-                        <p>$ 10000</p>
-                        <p style="color: red; font-size: 24px; cursor: pointer">
+                        <p>
+                            <input
+                                type="text"
+                                class="input"
+                                v-model="itemCart.quantity"
+                            />
+                        </p>
+                        <p v-if="itemCart.quantity">
+                            $ {{ itemCart.quantity * itemCart.unit_price }}
+                        </p>
+                        <p v-else></p>
+                        <p
+                            style="color: red; font-size: 24px; cursor: pointer"
+                            @click="removeItem(i)"
+                        >
                             &times;
                         </p>
                     </div>
                     <div style="padding: 10px 30px !important">
-                        <button class="btn btn-sm btn__open--modal">
+                        <button
+                            class="btn btn-sm btn__open--modal"
+                            @click="openModal()"
+                        >
                             Add New Line
                         </button>
                     </div>
@@ -135,20 +223,25 @@ const addCard = (item) => {
                             cols="50"
                             rows="7"
                             class="textarea"
+                            v-model="form.term_and_conditions"
                         ></textarea>
                     </div>
                     <div>
                         <div class="table__footer--subtotal">
                             <p>Sub Total</p>
-                            <span>$ 1000</span>
+                            <span>$ {{ SubTotal() }}</span>
                         </div>
                         <div class="table__footer--discount">
                             <p>Discount</p>
-                            <input type="text" class="input" />
+                            <input
+                                type="text"
+                                class="input"
+                                v-model="form.discount"
+                            />
                         </div>
                         <div class="table__footer--total">
                             <p>Grand Total</p>
-                            <span>$ 1200</span>
+                            <span>$ {{ Total() }}</span>
                         </div>
                     </div>
                 </div>
@@ -156,9 +249,68 @@ const addCard = (item) => {
             <div class="card__header" style="margin-top: 40px">
                 <div></div>
                 <div>
-                    <a class="btn btn-secondary"> Save </a>
+                    <a class="btn btn-secondary" @click="onSave()"> Save </a>
                 </div>
             </div>
         </div>
+
+        <!--==================== add modal items ====================-->
+        <div class="modal main__modal" :class="{ show: showModal }">
+            <div class="modal__content">
+                <span
+                    class="modal__close btn__close--modal"
+                    @click="closeModal()"
+                    >×</span
+                >
+                <h3 class="modal__title">Add Item</h3>
+                <hr />
+                <br />
+                <div class="modal__items">
+                    <ul style="list-style: none">
+                        <li
+                            style="
+                                display: grid;
+                                grid-template-columns: 30px 350px 15px;
+                                align-items: center;
+                                padding-bottom: 5px;
+                            "
+                            v-for="(item, i) in listProducts"
+                            :key="item.id"
+                        >
+                            <p>{{ i + 1 }}</p>
+                            <a href="#"
+                                >{{ item.item_code }}{{ item.description }}</a
+                            >
+                            <button
+                                @click="addCard(item)"
+                                style="
+                                    border: 1px solid #e0e0e0;
+                                    width: 35px;
+                                    height: 35px;
+                                    cursor: pointer;
+                                "
+                            >
+                                +
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <br />
+                <hr />
+                <div class="model__footer">
+                    <button
+                        class="btn btn-light mr-2 btn__close--modal"
+                        @click="closeModal()"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-light btn__close--modal">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <br /><br /><br />
     </div>
 </template>
