@@ -29,6 +29,11 @@ const print = () => {
     window.print();
     router.push("/").catch(() => {});
 };
+
+const deleteInvoice = (id) => {
+    axios.get("/api/delete_invoice/" + id);
+    router.push("/");
+};
 </script>
 <template>
     <div class="container">
@@ -68,7 +73,10 @@ const print = () => {
                         </li>
                         <li>
                             <!-- Select Btn Option -->
-                            <button class="selectBtnFlat">
+                            <button
+                                class="selectBtnFlat"
+                                @click="deleteInvoice(form.id)"
+                            >
                                 <i class="fas fa-pencil-alt"></i>
                                 Delete
                             </button>
