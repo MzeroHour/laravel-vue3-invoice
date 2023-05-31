@@ -1,5 +1,9 @@
 import "./bootstrap";
 
+import { createApp } from "vue";
+import app from "./components/app.vue";
+import router from "./router/index.js";
+
 /* import the fontawesome core */
 import { library } from "@fortawesome/fontawesome-svg-core";
 
@@ -17,11 +21,6 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 
 library.add(faTwitter, faFacebook, faStackOverflow, faGithub);
-
-import { createApp } from "vue";
-
-import app from "./components/app.vue";
-import router from "./router/index.js";
 
 createApp(app)
     .use(router)
