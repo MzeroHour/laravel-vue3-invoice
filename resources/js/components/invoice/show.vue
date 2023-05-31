@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import image from "../invoice/img/logo.png";
+
 const router = useRouter();
 
 let form = ref({ id: "" });
@@ -55,7 +57,9 @@ const deleteInvoice = (id) => {
                         <li>
                             <!-- Select Btn Option -->
                             <button class="selectBtnFlat" @click="print()">
-                                <i class="fas fa-print"></i>
+                                <font-awesome-icon
+                                    :icon="['fab', 'facebook']"
+                                />
                                 Print
                             </button>
                             <!-- End Select Btn Option -->
@@ -66,7 +70,7 @@ const deleteInvoice = (id) => {
                                 class="selectBtnFlat"
                                 @click="invoiceEdit(id)"
                             >
-                                <i class="fas fa-reply"></i>
+                                <font-awesome-icon :icon="['fab', 'twitter']" />
                                 Edit
                             </button>
                             <!-- End Select Btn Option -->
@@ -77,7 +81,7 @@ const deleteInvoice = (id) => {
                                 class="selectBtnFlat"
                                 @click="deleteInvoice(form.id)"
                             >
-                                <i class="fas fa-pencil-alt"></i>
+                                <font-awesome-icon :icon="['fab', 'github']" />
                                 Delete
                             </button>
                             <!-- End Select Btn Option -->
@@ -88,11 +92,7 @@ const deleteInvoice = (id) => {
 
             <div class="table invoice">
                 <div class="logo">
-                    <img
-                        src="assets/img/logo.png"
-                        alt=""
-                        style="width: 200px"
-                    />
+                    <img :src="image" :alt="image" width="200" />
                 </div>
                 <div class="invoice__header--title">
                     <p></p>
